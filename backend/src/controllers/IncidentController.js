@@ -29,12 +29,15 @@ module.exports = {
 
     const incident = await connection(currentTable).where('id', id).select('ong_id').first();
 
-    if (incident.ong_id !== ong_id) {
-      return res.status(401).json({ error: 'Operation not permitted.' });
+    if (!incident) {
+      return res.status(404).json({ error: 'Incident not find.' });
+    } else {
+      if (incident.ong_id !== ong_id) {
+        return res.status(401).json({ error: 'Operation not permitted.' });
+      }
+      await connection(currentTable).where('id', id).delete();
+
+      return res.status(204).send();
     }
-
-    await connection(currentTable).where('id', id).delete();
-
-    return res.status(204).send();
   },
 };
