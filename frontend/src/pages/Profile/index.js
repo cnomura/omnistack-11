@@ -1,89 +1,97 @@
-import React, { useState, useEffect } from 'react';
-import logoImg from '../../assets/logo.svg';
-import { Link, useHistory } from 'react-router-dom';
-import { FiPower, FiTrash2 } from 'react-icons/fi';
-import api from '../../services/api';
-import './style.css';
+import React, { useState, useEffect } from 'react'
+import { Link, useHistory } from 'react-router-dom'
+import { FiPower, FiTrash2 } from 'react-icons/fi'
+
+import api from '../../services/api'
+
+import { Container, Header, Ul } from './styles'
+
+import logoImg from '../../assets/logo1.svg'
 
 export default function Profile () {
-  const [incidents, setIncidents] = useState([]);
+  const [incidents, setIncidents] = useState([])
 
-  const ongName = localStorage.getItem('ongName');
-  const ongId = localStorage.getItem('ongId');
+  const history = useHistory()
 
-  const history = useHistory();
+  const ongId = localStorage.getItem('ongId')
+  const ongName = localStorage.getItem('ongName')
 
   useEffect(() => {
     api
-      .get('/profile', {
-        headers: { Authorization: ongId }
+      .get('profile', {
+        headers: {
+          Authorization: ongId,
+        },
       })
-      .then(response => {
-        setIncidents(response.data);
-      });
-  }, [ongId]);
+      .then((response) => {
+        setIncidents(response.data)
+      })
+  }, [ongId])
 
   async function handleDeleteIncident (id) {
     try {
       await api.delete(`incidents/${id}`, {
         headers: {
-          Authorization: ongId
-        }
-      });
+          Authorization: ongId,
+        },
+      })
 
-      setIncidents(incidents.filter(incident => incident.id !== id));
+      setIncidents(incidents.filter((incident) => incident.id !== id))
     } catch (err) {
-      alert('Erro ao deletar o caso');
+      alert('Erro ao deletar caso, tente novamente.')
     }
   }
 
   function handleLogout () {
-    localStorage.clear();
-    history.push('/');
+    localStorage.clear()
+
+    history.push('/')
   }
+
   return (
-    <div className='profile-container'>
-      <header>
-        <img src={logoImg} alt='Be The Hero' />
-        <span>Bem vinda, {ongName}</span>
+    <Container>
+      <Header>
+        <img src={logoImg} alt="Be The Hero" />
 
-        <Link to='/incidents/new' className='button'>
-          Cadastrar novo caso
-        </Link>
+        <span>Bem vindo, {ongName} </span>
 
-        <button type='button' onClick={handleLogout}>
-          <FiPower size={18} color='#e02041' />
+        <Link to="incidents/new">Cadastrar novo caso</Link>
+        <button onClick={handleLogout} type="button">
+          <FiPower size={18} color="#E02041" />
         </button>
-      </header>
+      </Header>
+      {incidents.length > 0 ? <h1>Casos cadastrados</h1> : null}
 
-      <h1> Casos cadastrados</h1>
+      <Ul>
+        {incidents.length > 0 ? (
+          incidents.map((incident) => (
+            <li key={incident.id}>
+              <strong>CASO:</strong>
+              <p>{incident.title}</p>
 
-      <ul>
-        {incidents.map(incident => (
-          <li key={incident.id}>
-            <strong>CASO:</strong>
-            <p>{incident.title}</p>
+              <strong>DESCRIÇÃO:</strong>
+              <p>{incident.description}</p>
 
-            <strong>DESCRIÇÃO:</strong>
-            <p>{incident.description}</p>
+              <strong>VALOR:</strong>
+              <p>
+                {Intl.NumberFormat('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                }).format(incident.value)}
+              </p>
 
-            <strong>VALOR:</strong>
-            <p>
-              {Intl.NumberFormat('pt-br', {
-                style: 'currency',
-                currency: 'BRL'
-              }).format(incident.value)}
-            </p>
-
-            <button
-              type='button'
-              onClick={() => handleDeleteIncident(incident.id)}
-            >
-              <FiTrash2 size={20} color='#a8a8b3' />
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+              <button
+                onClick={() => handleDeleteIncident(incident.id)}
+                type="button"
+              >
+                <FiTrash2 size={20} />
+              </button>
+            </li>
+          ))
+        ) : (
+            <h1>Nenhum caso registrado</h1>
+          )}
+      </Ul>
+    </Container>
+  )
 }
